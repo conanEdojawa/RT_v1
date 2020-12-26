@@ -13,6 +13,7 @@
 #include "../libft/libft.h"
 #include <stdio.h>
 #include "vector.h"
+#include "cylindre.h"
 #include <math.h>
 
 int     file_checker(char *str);

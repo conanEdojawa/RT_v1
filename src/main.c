@@ -3,7 +3,7 @@
 
 void SDL_ExitWithError(char *message);
 
-int intersection(t_ray d, t_sph s, t_vect *p, t_vect *n)
+int intersection_sphere(t_ray d, t_sph s, t_vect *hitPoint, t_vect *normal)
 {
     /*a*t^2 + bt + c = 0*/
     double a = 1;
@@ -22,13 +22,13 @@ int intersection(t_ray d, t_sph s, t_vect *p, t_vect *n)
         t = t1;
     else
         t = t2;
-    *p = add_vect(d.origine, vect_mult_val(d.direction, t));
-    *n = get_normalized(sub_vect(*p, s.origine));
+    *hitPoint = add_vect(d.origine, vect_mult_val(d.direction, t));
+    *normal = get_normalized(sub_vect(*hitPoint, s.origine));
 
     return 1;
 }
 
-int intersection_plan(t_ray d, t_plane pl/*, t_vect *pi, t_vect *n*/)
+int intersection_plan(t_ray d, t_plane pl , t_vect *hitPoint, t_vect *normal)
 {
     /*at + b = 0*/
     /*t = <(pl.ref - d.origine) , pl.direction> / <d.direction , pl.direction>*/
@@ -36,10 +36,30 @@ int intersection_plan(t_ray d, t_plane pl/*, t_vect *pi, t_vect *n*/)
     if(denominator > 0.000001)
     {
         double t = vect_scal(sub_vect(pl.ref, d.origine), pl.direction) / denominator;
-
-        return (t >= 0 ? 1 : -1);
+        if (t < 0) // plane behind ray's origin
+            return (-1);
+        *hitPoint = add_vect(d.origine, vect_mult_val(d.direction, t));
+        *normal = pl.direction;
+        return (1);
     }
     return (-1);
+}
+
+    /*
+    cy->rayon = rayon;
+    cy->lenght = lenght;
+    cy->ref = ref;
+    cy->axis_o = axis_o;
+    cy->axis_dir = axis_dir;
+    cy->color = color;
+    */
+
+int intersection_cylindre(t_ray d, t_cylindre cy)
+{
+    /*a*t^2 + bt + c = 0*/
+    double a = sub_vect(d.direction, vect_mult_val(cy.axis_dir ,vect_scal(d.direction, cy.axis_dir)));
+    double b = vect_scal(sub_vect(d.direction, vect_mult_val(cy.axis_dir, vect_scal(d.direction, cy.axis_dir))), sub_vect(sub_vect(d.origine, cy.axis_o), vect_mult_val(cy.axis_dir, vect_scal(sub_vect(d.origine, cy.axis_o), cy.axis_dir))));
+    double c = ;
 }
 
 int main(int ac, char **av)
@@ -91,17 +111,17 @@ int main(int ac, char **av)
     init_vect(&ref, 0, 0, -40);
     init_vect(&dir, 0, 1, 0);
     rayon_sph = 10;
-    init_vect(&albedo, 1, 0, 0);
+    init_vect(&albedo, 0.3, 0.3, 0.3);
 
     init_vect(&col, 0, 1, 0);
 
     init_sph(&sphere, orig_sph, rayon_sph, albedo);
     
     init_pln(&pl, ref, dir);
-    init_vect(&lum_pos, 0, 0, 30);
+    init_vect(&lum_pos, 40, 0, 30);
     intensite_lum = 1000000;
 
-    t_vect p,n;
+    t_vect p,n,p1,n1;
     t_vect intensite_pixel;
     while(i < WIN_W)
     {
@@ -112,24 +132,25 @@ int main(int ac, char **av)
             init_vect(&direction, i - (WIN_W / 2), j - (WIN_H / 2), -WIN_W / (2 * tan(helf_fov)));
             normalize(&direction);
             init_ray(&r, orig_ray, direction);
-            int has_inter = intersection(r, sphere, &p, &n);
-            int inter = intersection_plan(r, pl);
+            int has_inter = intersection_sphere(r, sphere, &p, &n);
+            int inter = intersection_plan(r, pl, &p1, &n1);
             zero_vect(&intensite_pixel);
             if(has_inter == 1)
             {
                 intensite_pixel = vect_mult_val(sphere.color, intensite_lum * fmax(0, vect_scal(get_normalized(sub_vect(lum_pos, p)), n)) / get_norm_2(sub_vect(lum_pos, p)));
-                if(SDL_SetRenderDrawColor(rend, 0, 255, 0, 255) != 0)
+                if(SDL_SetRenderDrawColor(rend, fmin(255., fmax(0 ,intensite_pixel.x)), fmin(255., fmax(0 ,intensite_pixel.y)), fmin(255., fmax(0 ,intensite_pixel.z)), 255) != 0)
                     SDL_ExitWithError("Get color failed");
             }
             else if(inter == 1)
             {
-                //intensite_pixel = vect_mult_val(sphere.color, intensite_lum * fmax(0, vect_scal(get_normalized(sub_vect(lum_pos, p)), n)) / get_norm_2(sub_vect(lum_pos, p)));
-                if(SDL_SetRenderDrawColor(rend, 250, 0, 0, 255) != 0)
+                intensite_pixel = vect_mult_val(pl.color, intensite_lum * fmax(0, vect_scal(get_normalized(sub_vect(lum_pos, p1)), n1)) / get_norm_2(sub_vect(lum_pos, p1)));
+                printf("%f", intensite_pixel.x);
+                if(SDL_SetRenderDrawColor(rend, fmin(255., fmax(100 ,intensite_pixel.x)), fmin(255., fmax(100 ,intensite_pixel.y)), fmin(255., fmax(100 ,intensite_pixel.z)), 255) != 0)
                     SDL_ExitWithError("Get color failed");
             }
             else
             {
-                if(SDL_SetRenderDrawColor(rend, 0, 0, 0, 255) != 0)
+                if(SDL_SetRenderDrawColor(rend, intensite_pixel.x, intensite_pixel.y, intensite_pixel.z, 255) != 0)
                     SDL_ExitWithError("Get color failed");
             }
             if(SDL_RenderDrawPoint(rend, i, j) != 0)
