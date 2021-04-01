@@ -1,7 +1,2 @@
 # RTv1
-Quand il s’agit de générer des images de synthèse en 3 dimensions, il existe en gros deux approches : la “Rasterisation”, qui est le procédé utilisé
-par l’écrasante majorité des moteurs de rendus pour son efficacité, et le “Ray Tracing”, approche beaucoup plus lourde en terme de calculs, donc peu adapté
-au temps réel, mais proposant un réalisme impressionant.
-Mais avant d’atteindre un tel niveau de qualité graphique, commençons par le commmencement : RTv1, notre premier ray tracer en C, à la norme, humble, mais
-fonctionnel.
-Et puis ca fait toujours des jolies images à montrer à votre chéri(e) pour justifier vos longues heures passées á l’école plutôt que dans ses bras :).
+When it comes to generating 3-dimensional CGI, there are basically two approaches: “Rasterization”, which is the process used by the overwhelming majority of rendering engines for its efficiency, and “Ray Tracing”. ”, A much heavier approach in terms of calculations, therefore not very suitable for real time, but offering an impressive realism. But before we get to that level of graphics quality, let's start with the basics: RTv1, our first C ray tracer, standard, humble, but functional. And then it always makes pretty pictures to show your sweetheart to justify your long hours spent in school rather than in their arms :).
